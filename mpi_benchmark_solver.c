@@ -21,8 +21,8 @@ void initialization(int x, int y, double* data); //initial conditions
 void update(int x, int y, int i, int j, int t, double* A, double* B, int id, int* dims); //update local matrix B
 void upgrade(int x, int y, int t, double* A, double* B, int id, int* dims); //copy matrix B to inner matrix of A
 void save(int x, int y, double* data, int n); //save to format data_mpi[n].txt
-double fexact(int x, int y, int t); //function f of "du/dt - Delta(u) = f"
-double ubench(int x, int y, int t); //function u (benchmark)
+double function_f(int x, int y, int t); //function f of "du/dt - Delta(u) = f"
+double benchmark_u(int x, int y, int t); //function u (benchmark)
 
 int main(int argc, char *argv[])
 {
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		//for(i=0; i<SIZEX; i++)
 		//{
 		//	for(j=0; j<SIZEY; j++)
-		//		data[i*SIZEY+j] = pow(data[i*SIZEY+j]-ubench(i+1, j+1, ITERATIONS), 2); //overwrite with L2 norm between result and benchmark function u
+		//		data[i*SIZEY+j] = pow(data[i*SIZEY+j]-benchmark_u(i+1, j+1, ITERATIONS), 2); //overwrite with L2 norm between result and benchmark function u
 		//}
 		
 		save(SIZEX, SIZEY, data, 0);
@@ -209,16 +209,16 @@ void initialization(int x, int y, double* data)
 	{
 		for(j=0; j<y; j++)
 			//data[i*y+j] = 0; //poisson equation
-			data[i*y+j] = ubench(i, j, 0); //heat equation
+			data[i*y+j] = benchmark_u(i, j, 0); //heat equation
 	}
 }
 
 void update(int x, int y, int i, int j, int t, double* A, double* B, int id, int* dims) //(i,j) parcourent A
 {	
 	//jacobi iteration:
-	//B[(i-1)*(y-2)+(j-1)] = (A[(i-1)*y+j] + A[(i+1)*y+j] + A[i*y+(j-1)] + A[i*y+(j+1)] + (DX*DX)*fexact(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), 0))/4.0; //DX=DY
+	//B[(i-1)*(y-2)+(j-1)] = (A[(i-1)*y+j] + A[(i+1)*y+j] + A[i*y+(j-1)] + A[i*y+(j+1)] + (DX*DX)*function_f(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), 0))/4.0; //DX=DY
 	//Euler explicit iteration:
-	B[(i-1)*(y-2)+(j-1)] = A[i*y+j] + DT*((A[(i-1)*y+j]-2.0*A[i*y+j]+A[(i+1)*y+j])/(DX*DX) + (A[i*y+j-1]-2.0*A[i*y+j]+A[i*y+j+1])/(DY*DY) + fexact(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), t));
+	B[(i-1)*(y-2)+(j-1)] = A[i*y+j] + DT*((A[(i-1)*y+j]-2.0*A[i*y+j]+A[(i+1)*y+j])/(DX*DX) + (A[i*y+j-1]-2.0*A[i*y+j]+A[i*y+j+1])/(DY*DY) + function_f(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), t));
 }
 
 void upgrade(int x, int y, int t, double* A, double* B, int id, int* dims)
@@ -233,22 +233,22 @@ void upgrade(int x, int y, int t, double* A, double* B, int id, int* dims)
 	if(floor((id-1)/dims[1]) == 0) //Dirichlet boundary condition on edges
 	{
 		for(j=0; j<y; j++)
-			A[0*y+j] = ubench(0, j+((id-1)%dims[1])*(y-2), t);
+			A[0*y+j] = benchmark_u(0, j+((id-1)%dims[1])*(y-2), t);
 	}
 	if(floor((id-1)/dims[1]) == dims[0]-1) //Dirichlet boundary condition on edges
 	{
 		for(j=0; j<y; j++)
-			A[(x-1)*y+j] = ubench(SIZEX+1, j+((id-1)%dims[1])*(y-2), t);
+			A[(x-1)*y+j] = benchmark_u(SIZEX+1, j+((id-1)%dims[1])*(y-2), t);
 	}
 	if(id%dims[1] == 1 || dims[1] == 1) //Dirichlet boundary condition on edges
 	{
 		for(i=0; i<x; i++)
-			A[i*y+0] = ubench(i+floor((id-1)/dims[1])*(x-2), 0, t);
+			A[i*y+0] = benchmark_u(i+floor((id-1)/dims[1])*(x-2), 0, t);
 	}
 	if(id%dims[1] == 0) //Dirichlet boundary condition on edges
 	{
 		for(i=0; i<x; i++)
-			A[i*y+(y-1)] = ubench(i+floor((id-1)/dims[1])*(x-2), SIZEY+1, t);
+			A[i*y+(y-1)] = benchmark_u(i+floor((id-1)/dims[1])*(x-2), SIZEY+1, t);
 	}
 }
 
@@ -271,16 +271,16 @@ void save(int x, int y, double* data, int n)
 	fclose(f);
 }
 
-double fexact(int x, int y, int t) //function F of "du/dt - Delta(u) = f"
+double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 {
 	double val;
-	//val = 2.0*ubench(x, y, 0); //poisson equation
-	val = ubench(x, y, t); //heat equation
+	//val = -2.0*benchmark_u(x, y, 0); //poisson equation
+	val = benchmark_u(x, y, t); //heat equation
 	
 	return(val);
 }
 
-double ubench(int x, int y, int t) //function u (benchmark)
+double benchmark_u(int x, int y, int t) //function u (benchmark)
 {
 	double val;
 	//val = sin(x*DX)*cos(y*DY); //poisson equation
