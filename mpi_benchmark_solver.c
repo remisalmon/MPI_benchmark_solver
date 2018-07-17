@@ -280,7 +280,7 @@ double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 {
 	double val;
 	val = (DX*DX+DY*DY)*benchmark_u(x, y, 0); //poisson equation
-	//val = (DX*DX+DY*DY+DT)*benchmark_u(x, y, t); //heat equation
+	//val = (DX*DX+DY*DY-DT)*benchmark_u(x, y, t); //heat equation
 	
 	return(val);
 }
