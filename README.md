@@ -6,11 +6,11 @@ du/dt - div(grad(u)) = f
 
 with
 
-u(x,y) = cos(a\*x)\*sin(b\*y) and f = -2*u (steady state Poisson equation solved with jacobi method)
+u(x,y) = cos(a\*x)\*sin(b\*y) and f = (a^2+b^2)*u (steady state Poisson equation solved with jacobi method)
 
 or
 
-u(x,y,t) = cos(a\*x)\*sin(b\*y)*exp(-c\*t) and f = u (heat equation solved with Euler explicit method)
+u(x,y,t) = cos(a\*x)\*sin(b\*y)*exp(-c\*t) and f = (a^2+b^2-c)*u (heat equation solved with Euler explicit method)
 
 Run:
 
