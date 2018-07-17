@@ -5,13 +5,13 @@
 
 #define SIZEX 100
 #define SIZEY 100
-#define ITERATIONS 1000
+#define ITERATIONS 10000
 #define MASTER 0
 #define START 1
 #define END 2
 #define COMM 3
 
-#define DT 0.001
+#define DT 0.0001
 #define LX 2*3.1416
 #define LY 2*3.1416
 #define DX LX/SIZEX
@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 {
 	int id, nbTasks, nbSlaves, sizexLocal, sizeyLocal, source, dest, north, south, east, west, message, rc, i, j;
 	double tstart, tend;
+	double RMS;
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
@@ -108,11 +109,14 @@ int main(int argc, char *argv[])
 		tend = MPI_Wtime();
 		printf("elapsed time = %.02f sec\n", tend-tstart);
 		
-		//for(i=0; i<SIZEX; i++)
-		//{
-		//	for(j=0; j<SIZEY; j++)
-		//		data[i*SIZEY+j] = pow(data[i*SIZEY+j]-benchmark_u(i+1, j+1, ITERATIONS), 2); //overwrite with L2 norm between result and benchmark function u
-		//}
+		for(i=0; i<SIZEX; i++)
+		{
+			for(j=0; j<SIZEY; j++)
+				RMS = RMS+ pow(data[i*SIZEY+j]-benchmark_u(i+1, j+1, ITERATIONS), 2);
+		}
+		RMS = sqrt(RMS/(SIZEX*SIZEY));
+		
+		printf("RMS = %.02f\n", RMS);
 		
 		save(SIZEX, SIZEY, data, 0);
 		
@@ -208,8 +212,8 @@ void initialization(int x, int y, double* data)
 	for(i=0; i<x; i++)
 	{
 		for(j=0; j<y; j++)
-			//data[i*y+j] = 0; //poisson equation
-			data[i*y+j] = benchmark_u(i, j, 0); //heat equation
+			data[i*y+j] = 0; //poisson equation
+			//data[i*y+j] = benchmark_u(i, j, 0); //heat equation
 	}
 }
 
@@ -219,6 +223,7 @@ void update(int x, int y, int i, int j, int t, double* A, double* B, int id, int
 	//B[(i-1)*(y-2)+(j-1)] = (A[(i-1)*y+j] + A[(i+1)*y+j] + A[i*y+(j-1)] + A[i*y+(j+1)] + (DX*DX)*function_f(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), 0))/4.0; //DX=DY
 	//Euler explicit iteration:
 	B[(i-1)*(y-2)+(j-1)] = A[i*y+j] + DT*((A[(i-1)*y+j]-2.0*A[i*y+j]+A[(i+1)*y+j])/(DX*DX) + (A[i*y+j-1]-2.0*A[i*y+j]+A[i*y+j+1])/(DY*DY) + function_f(i+floor((id-1)/dims[1])*(x-2), j+((id-1)%dims[1])*(y-2), t));
+
 }
 
 void upgrade(int x, int y, int t, double* A, double* B, int id, int* dims)
@@ -274,8 +279,8 @@ void save(int x, int y, double* data, int n)
 double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 {
 	double val;
-	//val = -2.0*benchmark_u(x, y, 0); //poisson equation
-	val = benchmark_u(x, y, t); //heat equation
+	val = (DX*DX+DY*DY)*benchmark_u(x, y, 0); //poisson equation
+	//val = (DX*DX+DY*DY+DT)*benchmark_u(x, y, t); //heat equation
 	
 	return(val);
 }
@@ -283,8 +288,8 @@ double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 double benchmark_u(int x, int y, int t) //function u (benchmark)
 {
 	double val;
-	//val = sin(x*DX)*cos(y*DY); //poisson equation
-	val = sin(x*DX)*cos(y*DY)*exp(-t*DT); //heat equation
+	val = sin(x*DX)*cos(y*DY); //poisson equation
+	//val = sin(x*DX)*cos(y*DY)*exp(-t*DT); //heat equation
 	
 	return(val);
 }
