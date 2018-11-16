@@ -14,6 +14,6 @@ or
 
 Run:
 
-`mpicc mpi_benchmark_solver.c -o mpi_exec && mpirun -np N ./mpi_exec`
+`mpicc MPI_benchmark_solver.c -o MPI_benchmark_solver && mpirun -np N MPI_benchmark_solver`
 
-with N = 1+2\*R+2\*C, R = 1,2,..., C = 0,1,2,...
+with `N = 1+2\*R+2\*C, R = 1,2,..., C = 0,1,2,...`
