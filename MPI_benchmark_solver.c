@@ -212,8 +212,8 @@ void initialization(int x, int y, double* data)
 	for(i=0; i<x; i++)
 	{
 		for(j=0; j<y; j++)
-			data[i*y+j] = 0; //poisson equation
-			//data[i*y+j] = benchmark_u(i, j, 0); //heat equation
+			data[i*y+j] = 0; //Heat equation
+			//data[i*y+j] = benchmark_u(i, j, 0); //Poisson equation
 	}
 }
 
@@ -279,8 +279,8 @@ void save(int x, int y, double* data, int n)
 double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 {
 	double val;
-	val = (DX*DX+DY*DY)*benchmark_u(x, y, 0); //poisson equation
-	//val = (DX*DX+DY*DY-DT)*benchmark_u(x, y, t); //heat equation
+	val = (DX*DX+DY*DY)*benchmark_u(x, y, 0); //Heat equation
+	//val = (DX*DX+DY*DY-DT)*benchmark_u(x, y, t); //Poisson equation
 	
 	return(val);
 }
@@ -288,8 +288,8 @@ double function_f(int x, int y, int t) //function f of "du/dt - Delta(u) = f"
 double benchmark_u(int x, int y, int t) //function u (benchmark)
 {
 	double val;
-	val = sin(x*DX)*cos(y*DY); //poisson equation
-	//val = sin(x*DX)*cos(y*DY)*exp(-t*DT); //heat equation
+	val = sin(x*DX)*cos(y*DY); //Heat equation
+	//val = sin(x*DX)*cos(y*DY)*exp(-t*DT); //Poisson equation
 	
 	return(val);
 }
